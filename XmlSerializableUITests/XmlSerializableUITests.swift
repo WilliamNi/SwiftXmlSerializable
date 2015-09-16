@@ -1,10 +1,3 @@
-//
-//  XmlSerializableUITests.swift
-//  XmlSerializableUITests
-//
-//  Created by ixprt13 on 9/16/15.
-//  Copyright © 2015 williamni. All rights reserved.
-//
 
 import XCTest
 
