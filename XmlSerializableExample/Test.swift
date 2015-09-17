@@ -21,11 +21,8 @@ struct InternalStruct: XmlSerializable{
 //
 //conforming XmlSerializable
 extension InternalStruct{
-    static var defaultRootName:String = "InternalStruct"
-    
-    func toXml(rootName: String) -> AEXMLDocument {
-        let xml = AEXMLDocument()
-        let root = xml.addChild(name: rootName)
+    func toXmlElem(rootName:String) -> AEXMLElement {
+        let root = AEXMLElement(rootName)
         
         root.addValueChild(name: "a", value: a)
         root.addValueChild(name: "b", value: b)
@@ -35,11 +32,10 @@ extension InternalStruct{
         root.addOptValueChild(name: "optA", value: optA)
         root.addOptValueChild(name: "optB", value: optB)
         
-        return xml
+        return root
     }
     
-    static func fromXml(xml: AEXMLDocument) -> InternalStruct? {
-        let root = xml.root
+    static func fromXmlElem(root:AEXMLElement) -> InternalStruct? {
         var ret = InternalStruct()
         
         do{
@@ -60,8 +56,6 @@ extension InternalStruct{
 }
 
 
-
-
 struct MyStruct: XmlSerializable{
     var internalStruct:InternalStruct = InternalStruct()
     var arr:[String] = [String]()
@@ -69,28 +63,24 @@ struct MyStruct: XmlSerializable{
 //
 //conforming XmlSerializable
 extension MyStruct{
-    static var defaultRootName:String = "MyStruct"
-    
-    func toXml(rootName: String) -> AEXMLDocument {
-        let xml = AEXMLDocument()
-        let root = xml.addChild(name: rootName)
+    func toXmlElem(rootName:String) -> AEXMLElement {
+        let root = AEXMLElement(rootName)
         
-        root.addChild(internalStruct.toXml("internalStruct").root)
+        root.addChild(internalStruct.toXmlElem("internalStruct"))
         
         let arrElem = root.addChild(name: "arr")
         for item in arr{
             arrElem.addValueChild(name: MyStruct.getArrItemStr(), value: item)
         }
         
-        return xml
+        return root
     }
     
-    static func fromXml(xml: AEXMLDocument) -> MyStruct? {
-        let root = xml.root
+    static func fromXmlElem(root:AEXMLElement) -> MyStruct? {
         var ret = MyStruct()
         
         do{
-            guard let internalStruct = InternalStruct.fromXmlRoot(root["internalStruct"]) else {return nil}
+            guard let internalStruct = InternalStruct.fromXmlElem(root["internalStruct"]) else {return nil}
             ret.internalStruct = internalStruct
             
             guard let arr = root["arr"][MyStruct.getArrItemStr()].all else {return nil}

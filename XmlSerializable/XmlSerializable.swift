@@ -2,33 +2,45 @@
 
 import Foundation
 
-
 //
 //Xml Serialization protocol
 //
 protocol XmlCommon{
-    static var defaultRootName:String {get}
+    
 }
 
+protocol XmlSavable:XmlCommon{
+    func toXmlElem(rootName:String) -> AEXMLElement
+}
+
+protocol XmlRetrievable:XmlCommon{
+    static func fromXmlElem(root:AEXMLElement) -> Self?
+}
+
+protocol XmlSerializable: XmlSavable, XmlRetrievable{
+    
+}
+
+//
+//Xml Serialization protocol extension
+//
 extension XmlCommon{
     static func getArrItemStr() -> String {
         return "arrItem"
     }
 }
 
-
-protocol XmlSavable:XmlCommon{
-    func toXml(rootName:String) -> AEXMLDocument
-}
 extension XmlSavable{
-    func toXml() -> AEXMLDocument{
-        return toXml(Self.defaultRootName)
+    func toXmlDoc(rootName:String? = nil) -> AEXMLDocument{
+        let xml = AEXMLDocument()
+        xml.addChild(toXmlElem(rootName ?? String(self.dynamicType)))
+        return xml
     }
     
     func toXmlString(rootName:String? = nil, compact:Bool = false) -> String {
         var xml:AEXMLDocument
-        let rootName_t = rootName ?? Self.defaultRootName
-        xml = toXml(rootName_t)
+        let rootName_t = rootName ?? String(self.dynamicType)
+        xml = toXmlDoc(rootName_t)
         
         if compact == true {
             return xml.xmlStringCompact
@@ -43,7 +55,6 @@ extension XmlSavable{
             return data
         }
         else{
-            Log.severe("Cannot convert String to NSData")
             return NSData()
         }
     }
@@ -53,14 +64,10 @@ extension XmlSavable{
     }
 }
 
-protocol XmlRetrievable:XmlCommon{
-    static func fromXml(xml:AEXMLDocument) -> Self?
-}
 extension XmlRetrievable{
-    static func fromXmlRoot(xmlRootElem:AEXMLElement) -> Self?{
-        let xmlDoc = AEXMLDocument()
-        xmlDoc.addChild(xmlRootElem)
-        return fromXml(xmlDoc)
+    static func fromXmlDoc(xml:AEXMLDocument) -> Self?{
+        let root = xml.root
+        return fromXmlElem(root)
     }
     
     static func fromXmlData(xmlData:NSData) -> Self?{
@@ -69,7 +76,7 @@ extension XmlRetrievable{
 
             return nil
         }
-        return fromXml(xmlDoc)
+        return fromXmlDoc(xmlDoc)
     }
     
     static func fromXmlString(xmlStr:String) -> Self?{
@@ -91,9 +98,7 @@ extension XmlRetrievable{
     }
 }
 
-protocol XmlSerializable: XmlSavable, XmlRetrievable{
-    
-}
+
 
 
 
@@ -103,6 +108,7 @@ protocol XmlSerializable: XmlSavable, XmlRetrievable{
 enum AEXMLError:ErrorType{
     case Common(String)
 }
+/*
 extension AEXMLError{
     func log(logAsWarn:Bool = false) -> AEXMLError{
         var str = "throw AEXMLError: "
@@ -119,6 +125,7 @@ extension AEXMLError{
         return self
     }
 }
+*/
 
 extension AEXMLElement{
     public var available:Bool {
@@ -133,24 +140,24 @@ extension AEXMLElement{
     //getter functions will throw error if cannot get value or value type is not correct
     //
     public func getStringVal() throws -> String {
-        guard self.available else { throw AEXMLError.Common("").log(true) }
-        guard let ret = self.value else { throw AEXMLError.Common("").log(true) }
+        guard self.available else { throw AEXMLError.Common("") }
+        guard let ret = self.value else { throw AEXMLError.Common("") }
         return ret
     }
     public func getBoolVal() throws -> Bool {
         let strVal = try getStringVal()
         if (strVal.lowercaseString == "true" || Int(strVal) == 1) {return true}
         if (strVal.lowercaseString == "false" || Int(strVal) == 0) {return false}
-        throw AEXMLError.Common("").log(true)
+        throw AEXMLError.Common("")
     }
     public func getIntVal() throws -> Int {
         let strVal = try getStringVal()
-        guard let temp = Int(strVal) else {throw AEXMLError.Common("").log(true)}
+        guard let temp = Int(strVal) else {throw AEXMLError.Common("")}
         return temp
     }
     public func getDoubleVal() throws -> Double {
         let strVal = try getStringVal()
-        guard let temp = Double(strVal) else {throw AEXMLError.Common("").log(true)}
+        guard let temp = Double(strVal) else {throw AEXMLError.Common("")}
         return temp
     }
     public func getDateVal() throws -> NSDate {
@@ -175,7 +182,7 @@ extension AEXMLElement{
             }
         }
         
-        throw AEXMLError.Common("").log(true)
+        throw AEXMLError.Common("")
     }
     public func getStringOptVal() throws -> String? {
         return (try optIsNil()) ? nil : (try self.getStringVal())
@@ -238,6 +245,7 @@ extension AEXMLElement{
 }
 
 
+/*
 class Log{
     static func warning(msg:String){
         print("Warning: " + msg)
@@ -249,3 +257,4 @@ class Log{
         print("Severe Error: " + msg)
     }
 }
+*/
