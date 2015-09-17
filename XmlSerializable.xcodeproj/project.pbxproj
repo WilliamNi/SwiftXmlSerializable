@@ -16,6 +16,7 @@
 		19C703091BAA264B001EA5DC /* XmlSerializableUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19C703081BAA264B001EA5DC /* XmlSerializableUITests.swift */; };
 		19C7031F1BAA3263001EA5DC /* AEXML.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19C7031E1BAA3263001EA5DC /* AEXML.swift */; settings = {ASSET_TAGS = (); }; };
 		19C703211BAA3529001EA5DC /* XmlSerializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19C703201BAA3529001EA5DC /* XmlSerializable.swift */; settings = {ASSET_TAGS = (); }; };
+		19C703231BAA41EB001EA5DC /* Test.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19C703221BAA41EB001EA5DC /* Test.swift */; settings = {ASSET_TAGS = (); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +52,7 @@
 		19C7030A1BAA264B001EA5DC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		19C7031E1BAA3263001EA5DC /* AEXML.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AEXML.swift; path = 3rdParty/AEXML/AEXML/AEXML.swift; sourceTree = "<group>"; };
 		19C703201BAA3529001EA5DC /* XmlSerializable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XmlSerializable.swift; sourceTree = "<group>"; };
+		19C703221BAA41EB001EA5DC /* Test.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Test.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,6 +105,7 @@
 		19C702E71BAA264A001EA5DC /* XmlSerializableExample */ = {
 			isa = PBXGroup;
 			children = (
+				19C703221BAA41EB001EA5DC /* Test.swift */,
 				19C702E81BAA264A001EA5DC /* AppDelegate.swift */,
 				19C702EA1BAA264A001EA5DC /* ViewController.swift */,
 				19C702EC1BAA264B001EA5DC /* Main.storyboard */,
@@ -287,6 +290,7 @@
 			files = (
 				19C703211BAA3529001EA5DC /* XmlSerializable.swift in Sources */,
 				19C702EB1BAA264A001EA5DC /* ViewController.swift in Sources */,
+				19C703231BAA41EB001EA5DC /* Test.swift in Sources */,
 				19C7031F1BAA3263001EA5DC /* AEXML.swift in Sources */,
 				19C702E91BAA264A001EA5DC /* AppDelegate.swift in Sources */,
 			);

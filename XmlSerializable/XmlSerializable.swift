@@ -66,7 +66,7 @@ extension XmlRetrievable{
     static func fromXmlData(xmlData:NSData) -> Self?{
         var error:NSError?
         guard let xmlDoc = AEXMLDocument(xmlData: xmlData, error: &error) else{
-            Log.error("Fail to parse XML data")
+
             return nil
         }
         return fromXml(xmlDoc)
@@ -129,24 +129,6 @@ extension AEXMLElement{
         return available ? self : nil
     }
     
-    /*
-    public var valueIsNil: Bool {
-    let isNilAttr = self.attributes["isNil"]
-    if let attr = (isNilAttr as? String) {
-    if attr == "1" {
-    return true
-    }
-    }
-    
-    return false
-    }
-    
-    public var stringOptValue: String? { return valueIsNil ? nil : (value ?? String()) }
-    public var boolOptValue: Bool? { return valueIsNil ? nil : (stringValue.lowercaseString == "true" || Int(stringValue) == 1 ? true : false) }
-    public var intOptValue: Int? { return valueIsNil ? nil : (Int(stringValue) ?? 0) }
-    public var doubleOptValue: Double? { return valueIsNil ? nil : ((stringValue as NSString).doubleValue) }
-    */
-    
     //
     //getter functions will throw error if cannot get value or value type is not correct
     //
@@ -158,7 +140,7 @@ extension AEXMLElement{
     public func getBoolVal() throws -> Bool {
         let strVal = try getStringVal()
         if (strVal.lowercaseString == "true" || Int(strVal) == 1) {return true}
-        if (strVal.lowercaseString == "false" || Int(strVal) == 0) {return true}
+        if (strVal.lowercaseString == "false" || Int(strVal) == 0) {return false}
         throw AEXMLError.Common("").log(true)
     }
     public func getIntVal() throws -> Int {
@@ -172,11 +154,13 @@ extension AEXMLElement{
         return temp
     }
     public func getDateVal() throws -> NSDate {
-        let strVal = try getStringVal()
+        /*let strVal = try getStringVal()
         let fmt = NSDateFormatter()
         fmt.dateFormat = "yyyyMMdd_HHmmss"
         guard let temp = fmt.dateFromString(strVal) else {throw AEXMLError.Common("").log(true)}
         return temp
+        */
+        return NSDate(timeIntervalSince1970: (try getDoubleVal()))
     }
     
     
@@ -230,9 +214,10 @@ extension AEXMLElement{
         case let boolVal as Bool:
             xmlValue = boolVal ? "true" : "false"
         case let dateVal as NSDate:
-            let fmt = NSDateFormatter()
+            /*let fmt = NSDateFormatter()
             fmt.dateFormat = "yyyyMMdd_HHmmss"
-            xmlValue = fmt.stringFromDate(dateVal)
+            xmlValue = fmt.stringFromDate(dateVal)*/
+            xmlValue = "\(dateVal.timeIntervalSince1970)"
         default:
             return AEXMLElement(AEXMLElement.errorElementName, value: "Value type must be Int, Double, String, Bool or NSDate.")
         }
