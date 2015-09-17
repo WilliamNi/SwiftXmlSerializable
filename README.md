@@ -2,6 +2,21 @@
 XML Serialization help lib for iOS written in Swift, which is based upon AEXML.
 
 ##How to use:
+Your data type need to conform XmlSerializable protocol, or conform XmlSavable/XmlRetrievable protocol if need only save/retrieve xml.
+```swift
+protocol XmlCommon{
+}
+protocol XmlSavable:XmlCommon{
+    func toXmlElem(rootName:String) -> AEXMLElement
+}
+protocol XmlRetrievable:XmlCommon{
+    static func fromXmlElem(root:AEXMLElement) -> Self?
+}
+protocol XmlSerializable: XmlSavable, XmlRetrievable{
+}
+```
+
+##Sample code
 ```swift
 struct InternalStruct: XmlSerializable{
     var a:Int = 10
@@ -13,15 +28,11 @@ struct InternalStruct: XmlSerializable{
     var optA:Int? = nil
     var optB:String? = "optB"
 }
-
 //
 //conforming XmlSerializable
 extension InternalStruct{
-    static var defaultRootName:String = "InternalStruct"
-    
-    func toXml(rootName: String) -> AEXMLDocument {
-        let xml = AEXMLDocument()
-        let root = xml.addChild(name: rootName)
+    func toXmlElem(rootName:String) -> AEXMLElement {
+        let root = AEXMLElement(rootName)
         
         root.addValueChild(name: "a", value: a)
         root.addValueChild(name: "b", value: b)
@@ -31,11 +42,10 @@ extension InternalStruct{
         root.addOptValueChild(name: "optA", value: optA)
         root.addOptValueChild(name: "optB", value: optB)
         
-        return xml
+        return root
     }
     
-    static func fromXml(xml: AEXMLDocument) -> InternalStruct? {
-        let root = xml.root
+    static func fromXmlElem(root:AEXMLElement) -> InternalStruct? {
         var ret = InternalStruct()
         
         do{
@@ -56,8 +66,6 @@ extension InternalStruct{
 }
 
 
-
-
 struct MyStruct: XmlSerializable{
     var internalStruct:InternalStruct = InternalStruct()
     var arr:[String] = [String]()
@@ -65,28 +73,24 @@ struct MyStruct: XmlSerializable{
 //
 //conforming XmlSerializable
 extension MyStruct{
-    static var defaultRootName:String = "MyStruct"
-    
-    func toXml(rootName: String) -> AEXMLDocument {
-        let xml = AEXMLDocument()
-        let root = xml.addChild(name: rootName)
+    func toXmlElem(rootName:String) -> AEXMLElement {
+        let root = AEXMLElement(rootName)
         
-        root.addChild(internalStruct.toXml("internalStruct").root)
+        root.addChild(internalStruct.toXmlElem("internalStruct"))
         
         let arrElem = root.addChild(name: "arr")
         for item in arr{
             arrElem.addValueChild(name: MyStruct.getArrItemStr(), value: item)
         }
         
-        return xml
+        return root
     }
     
-    static func fromXml(xml: AEXMLDocument) -> MyStruct? {
-        let root = xml.root
+    static func fromXmlElem(root:AEXMLElement) -> MyStruct? {
         var ret = MyStruct()
         
         do{
-            guard let internalStruct = InternalStruct.fromXmlRoot(root["internalStruct"]) else {return nil}
+            guard let internalStruct = InternalStruct.fromXmlElem(root["internalStruct"]) else {return nil}
             ret.internalStruct = internalStruct
             
             guard let arr = root["arr"][MyStruct.getArrItemStr()].all else {return nil}
@@ -119,34 +123,32 @@ func compare(lVal:MyStruct, rVal:MyStruct) -> Bool{
 }
 
 func testXmlSerializable(){
-        var val1 = InternalStruct()
-        val1.a = 100
-        val1.b = "bbb"
-        val1.c = false
-        val1.d = 200.232
-        val1.e = NSDate()
-        val1.optA = nil
-        val1.optB = "optB"
-        
-        var val2 = MyStruct()
-        val2.internalStruct = val1
-        val2.arr = ["aaa", "bbb", "ccc"]
-        
-        let xmlStr = val2.toXmlString()
-        print(xmlStr)
-        
-        let xmlFileUrl = getDocDirURL().URLByAppendingPathComponent("MyStruct.xml")
-        val2.toXmlFile(xmlUrl: xmlFileUrl)
-        
-        if let val2New = MyStruct.fromXmlFile(xmlFileUrl){
-            let ret = compare(val2, rVal: val2New)
-            let retStr = ret ? "same" : "different"
-            print("Compare original struct and retrieved struct. They are \(retStr)")
-        }
-        else{
-            print("Cannot load Xml file from \(xmlFileUrl)")
-        }
+    var val1 = InternalStruct()
+    val1.a = 100
+    val1.b = "bbb"
+    val1.c = false
+    val1.d = 200.232
+    val1.e = NSDate()
+    val1.optA = nil
+    val1.optB = "optB"
+    
+    var val2 = MyStruct()
+    val2.internalStruct = val1
+    val2.arr = ["aaa", "bbb", "ccc"]
+    
+    let xmlStr = val2.toXmlString()
+    print(xmlStr)
+    
+    let xmlFileUrl = getDocDirURL().URLByAppendingPathComponent("MyStruct.xml")
+    val2.toXmlFile(xmlUrl: xmlFileUrl)
+    
+    if let val2New = MyStruct.fromXmlFile(xmlFileUrl){
+        let ret = compare(val2, rVal: val2New)
+        let retStr = ret ? "same" : "different"
+        print("Compare original struct and retrieved struct. They are \(retStr)")
     }
-
-
+    else{
+        print("Cannot load Xml file from \(xmlFileUrl)")
+    }
+}
 ```
