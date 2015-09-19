@@ -63,7 +63,7 @@ struct MyStruct: XmlSerializable{
 //
 //conforming XmlSerializable
 extension MyStruct{
-    func toXmlElem(rootName:String) -> AEXMLElement {
+    /*func toXmlElem(rootName:String) -> AEXMLElement {
         let root = AEXMLElement(rootName)
         
         root.addChild(internalStruct.toXmlElem("internalStruct"))
@@ -74,7 +74,7 @@ extension MyStruct{
         }
         
         return root
-    }
+    }*/
     
     static func fromXmlElem(root:AEXMLElement) -> MyStruct? {
         var ret = MyStruct()

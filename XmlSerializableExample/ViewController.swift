@@ -42,24 +42,25 @@ class ViewController: UIViewController {
         val2.internalStruct = val1
         val2.arr = ["aaa", "bbb", "ccc"]
         
-        let xmlStr = val2.toXmlString()
-        print(xmlStr)
-        
-        let xmlFileUrl = getDocDirURL().URLByAppendingPathComponent("MyStruct.xml")
-        val2.toXmlFile(xmlUrl: xmlFileUrl)
-        
-        if let val2New = MyStruct.fromXmlFile(xmlFileUrl){
-            let ret = compare(val2, rVal: val2New)
-            let retStr = ret ? "same" : "different"
-            print("Compare original struct and retrieved struct. They are \(retStr)")
+        do {
+            let xmlStr = try val2.toXmlString()
+            print(xmlStr)
+            
+            let xmlFileUrl = getDocDirURL().URLByAppendingPathComponent("MyStruct.xml")
+            try val2.toXmlFile(xmlUrl: xmlFileUrl)
+            
+            if let val2New = MyStruct.fromXmlFile(xmlFileUrl){
+                let ret = compare(val2, rVal: val2New)
+                let retStr = ret ? "same" : "different"
+                print("Compare original struct and retrieved struct. They are \(retStr)")
+            }
+            else{
+                print("Cannot load Xml file from \(xmlFileUrl)")
+            }
         }
-        else{
-            print("Cannot load Xml file from \(xmlFileUrl)")
+        catch let error as NSError{
+            print(error.localizedDescription)
         }
-        
-        
-        
-        
     }
 
 }
