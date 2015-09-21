@@ -25,20 +25,17 @@ class ViewController: UIViewController {
     }
     
     
-    
-
-    
     func testXmlSerializable(){
         var val1 = InternalStruct()
         val1.a = 100
         val1.b = "bbb"
         val1.c = false
         val1.d = 200.232
-//        val1.e = NSDate()
+        val1.e = NSDate()
         val1.optA = nil
         val1.optB = "optB_new"
         
-        var val2 = MyStruct()
+        let val2 = MyClass()
         val2.internalStruct = val1
         val2.arr = ["aaa", "bbb", "ccc"]
         val2.dict = ["a":1, "b":10, "c":100]
@@ -50,7 +47,7 @@ class ViewController: UIViewController {
             let xmlFileUrl = getDocDirURL().URLByAppendingPathComponent("MyStruct.xml")
             try val2.toXmlFile(xmlUrl: xmlFileUrl)
             
-            let val2New = try MyStruct.fromXmlFile(xmlFileUrl)
+            let val2New = try MyClass.fromXmlFile(xmlFileUrl)
             let ret = compare(val2, rVal: val2New)
             let retStr = ret ? "same" : "different"
             print("Compare original struct and retrieved struct. They are \(retStr)")

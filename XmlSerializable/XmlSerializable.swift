@@ -8,12 +8,22 @@ import Foundation
 protocol XmlCommon{
 }
 
+/**
+*  Although func toXmlElem(rootName:String)throws -> AEXMLElement is listed in protocol, you do not need to impelement it, since there's a default one in XmlSavable extension.
+*/
 protocol XmlSavable:XmlCommon{
     func toXmlElem(rootName:String)throws -> AEXMLElement
 }
 
+/**
+*  You need to implement following 2 functions to conform XmlRetrievable protocol:
+*  1. init()
+*  2. static func fromXmlElem(root:AEXMLElement)throws -> Self
+*/
 protocol XmlRetrievable:XmlCommon{
+    init()
     static func fromXmlElem(root:AEXMLElement)throws -> Self
+    //init(root:AEXMLElement)throws
 }
 
 protocol XmlSerializable: XmlSavable, XmlRetrievable{
@@ -33,6 +43,9 @@ extension Int:XmlSerializable{
     static func fromXmlElem(root:AEXMLElement)throws -> Int{
         return try root.getIntVal()
     }
+    /*init(root:AEXMLElement)throws{
+        self = try root.getIntVal()
+    }*/
 }
 extension String:XmlSerializable{
     func toXmlElem(rootName:String) -> AEXMLElement{
@@ -41,6 +54,9 @@ extension String:XmlSerializable{
     static func fromXmlElem(root:AEXMLElement)throws -> String{
         return try root.getStringVal()
     }
+    /*init(root:AEXMLElement)throws{
+        self = try root.getStringVal()
+    }*/
 }
 extension Bool:XmlSerializable{
     func toXmlElem(rootName:String) -> AEXMLElement{
@@ -49,6 +65,9 @@ extension Bool:XmlSerializable{
     static func fromXmlElem(root:AEXMLElement)throws -> Bool{
         return try root.getBoolVal()
     }
+    /*init(root:AEXMLElement)throws{
+        self = try root.getBoolVal()
+    }*/
 }
 extension Double:XmlSerializable{
     func toXmlElem(rootName:String) -> AEXMLElement{
@@ -57,18 +76,29 @@ extension Double:XmlSerializable{
     static func fromXmlElem(root:AEXMLElement)throws -> Double{
         return try root.getDoubleVal()
     }
+    /*init(root:AEXMLElement)throws{
+        self = try root.getDoubleVal()
+    }*/
 }
 
-/*
+
 extension NSDate:XmlSerializable{
     func toXmlElem(rootName:String) -> AEXMLElement{
         return AEXMLElement(rootName, value: String(self.timeIntervalSince1970))
     }
-    static func fromXmlElem(root:AEXMLElement)throws -> NSDate{
-        return (try root.getDateVal())
+    static func fromXmlElem(root:AEXMLElement)throws -> Self{
+        let d = (try root.getDateVal())
+        return self.init(timeInterval: 0, sinceDate: d)
     }
+    
+    /*convenience init(root:AEXMLElement)throws{
+        //let d = try root.getDateVal()
+        //self.init(timeInterval: 0, sinceDate: d)
+        self.init()
+        throw AEXMLError.Common("")
+    }*/
 }
-*/
+
 
 
 extension Optional:XmlSerializable{
@@ -90,12 +120,23 @@ extension Optional:XmlSerializable{
         if try root.optIsNil() {
             return nil
         }
-        else{
-            let ret = try (Wrapped.self as! XmlRetrievable.Type).fromXmlElem(root)
-            return (ret as! Wrapped)
-            
+        guard let wrappedType = Wrapped.self as? XmlRetrievable.Type else{
+            throw AEXMLError.Common("")
         }
+        let ret = try wrappedType.fromXmlElem(root)
+        return (ret as! Wrapped)
+
     }
+    /*init(root:AEXMLElement)throws{
+        if try root.optIsNil() {
+            self = nil
+            return
+        }
+        guard let wrappedType = Wrapped.self as? XmlRetrievable.Type else{
+            throw AEXMLError.Common("")
+        }
+        self = .Some(try wrappedType.init(root: root) as! Wrapped)
+    }*/
 }
 
 
@@ -108,7 +149,7 @@ extension Array:XmlSerializable{
         return ret
     }
     static func fromXmlElem(root:AEXMLElement)throws -> Array{
-        guard let items = root[MyStruct.getArrItemStr()].all else{
+        guard let items = root[Array.getArrItemStr()].all else{
             throw AEXMLError.Common("")
         }
         var ret = Array<Element>()
@@ -123,9 +164,24 @@ extension Array:XmlSerializable{
         }
         return ret
     }
+    /*init(root:AEXMLElement)throws{
+        guard let items = root[MyStruct.getArrItemStr()].all else{
+            throw AEXMLError.Common("")
+        }
+        self.init()
+        for item in items{
+            if let elemType = Element.self as? XmlRetrievable.Type {
+                let elemItem = try elemType.init(root: item)
+                self.append(elemItem as! Element)
+            }
+            else{
+                throw AEXMLError.Common("")
+            }
+        }
+    }*/
 }
 
-extension Dictionary:XmlSavable{
+extension Dictionary:XmlSerializable{
     func toXmlElem(rootName: String) throws -> AEXMLElement {
         let ret = AEXMLElement(rootName)
         for (key, value) in self{
@@ -157,13 +213,48 @@ extension Dictionary:XmlSavable{
         
         return ret
     }
+    /*init(root:AEXMLElement)throws{
+        guard root.available else{
+            throw AEXMLError.Common("")
+        }
+        guard let _ = Key.self as? String.Type else {
+            throw AEXMLError.Common("")
+        }
+        
+        self.init()
+        for child in root.children{
+            if let valueType = Value.self as? XmlRetrievable.Type {
+                let valueItem = try valueType.init(root: child)
+                self[child.name as! Key] = (valueItem as! Value)
+            }
+            else{
+                throw AEXMLError.Common("")
+            }
+        }
+    }*/
 }
 
-extension Set:XmlSavable{
+extension Set:XmlSerializable{
     func toXmlElem(rootName:String)throws -> AEXMLElement{
         let ret = AEXMLElement(rootName)
         for item in self{
             ret.addChild(try Set.objToXmlElem(item, rootName: Set.getSetItemStr()))
+        }
+        return ret
+    }
+    static func fromXmlElem(root:AEXMLElement)throws -> Set{
+        guard let items = root[Set.getSetItemStr()].all else{
+            throw AEXMLError.Common("")
+        }
+        var ret:Set = []
+        for item in items{
+            if let elemType = Element.self as? XmlRetrievable.Type {
+                let elemItem = try elemType.fromXmlElem(item)
+                ret.insert(elemItem as! Element)
+            }
+            else{
+                throw AEXMLError.Common("")
+            }
         }
         return ret
     }
@@ -242,6 +333,36 @@ extension XmlSavable{
 }
 
 extension XmlRetrievable{
+/*    init(xmlDoc:AEXMLDocument)throws{
+        let root = xmlDoc.root
+        try self.init(root: root)
+    }
+    
+    init(xmlData:NSData)throws{
+        var error:NSError?
+        guard let xmlDoc = AEXMLDocument(xmlData: xmlData, error: &error) else{
+            throw AEXMLError.Common("")
+        }
+        try self.init(xmlDoc: xmlDoc)
+    }
+    
+    init(xmlStr:String)throws{
+        if let data = xmlStr.dataUsingEncoding(NSUTF8StringEncoding){
+            try self.init(xmlData: data)
+        }
+        else {
+            throw AEXMLError.Common("")
+        }
+    }
+    
+    init(xmlUrl:NSURL)throws{
+        if let data = NSData(contentsOfURL: xmlUrl) {
+            try self.init(xmlData: data)
+        }
+        else{
+            throw AEXMLError.Common("")
+        }
+    }*/
     static func fromXmlDoc(xml:AEXMLDocument)throws -> Self{
         let root = xml.root
         return try fromXmlElem(root)

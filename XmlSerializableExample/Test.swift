@@ -8,12 +8,12 @@
 
 import Foundation
 
-struct InternalStruct: XmlSerializable{
+struct InternalStruct: XmlSavable, XmlRetrievable{
     var a:Int = 10
     var b:String = "b"
     var c:Bool   =  true
     var d:Double  = 20.20
-//    var e:NSDate  = NSDate()
+    var e:NSDate  = NSDate()
     
     var optA:Int? = nil
     var optB:String? = "optB"
@@ -23,50 +23,52 @@ struct InternalStruct: XmlSerializable{
 extension InternalStruct{
     static func fromXmlElem(root:AEXMLElement)throws -> InternalStruct {
         var ret = InternalStruct()
-        
         do{
-            ret.a = try root["a"].getIntVal()
-            ret.b = try root["b"].getStringVal()
-            ret.c = try root["c"].getBoolVal()
-            ret.d = try root["d"].getDoubleVal()
-//            ret.e = try root["e"].getDateVal()
-            ret.optA = try root["optA"].getIntOptVal()
-            ret.optB = try root["optB"].getStringOptVal()
+            ret.a = try Int.fromXmlElem(root["a"])
+            ret.b = try String.fromXmlElem(root["b"])
+            ret.c = try Bool.fromXmlElem(root["c"])
+            ret.d = try Double.fromXmlElem(root["d"])
+            ret.e = try NSDate.fromXmlElem(root["e"])
+            ret.optA = try (Int?).fromXmlElem(root["optA"])
+            ret.optB = try (String?).fromXmlElem(root["optB"])
         }
-        
         return ret
     }
 }
 
 
-struct MyStruct: XmlSerializable{
-    var internalStruct:InternalStruct = InternalStruct()
-    var arr:[String] = [String]()
-    var dict:[String: Int] = [:]
+class MyClass: XmlSavable, XmlRetrievable{
+    var internalStruct:InternalStruct
+    var arr:[String]
+    var dict:[String: Int]
+    
+    required init(){
+        internalStruct = InternalStruct()
+        arr = [String]()
+        dict = [:]
+    }
 }
 
 //
 //conforming XmlSerializable
-extension MyStruct{
-    static func fromXmlElem(root:AEXMLElement)throws -> MyStruct {
-        var ret = MyStruct()
-        
+extension MyClass{
+    static func fromXmlElem(root:AEXMLElement)throws -> Self {
+        let ret = self.init()
         do{
             ret.internalStruct = try InternalStruct.fromXmlElem(root["internalStruct"])
             ret.arr = try [String].fromXmlElem(root["arr"])
             ret.dict = try [String: Int].fromXmlElem(root["dict"])
         }
-        
         return ret
     }
 }
 
-func compare(lVal:MyStruct, rVal:MyStruct) -> Bool{
+func compare(lVal:MyClass, rVal:MyClass) -> Bool{
     if lVal.internalStruct.a != rVal.internalStruct.a {return false}
     if lVal.internalStruct.b != rVal.internalStruct.b {return false}
     if lVal.internalStruct.c != rVal.internalStruct.c {return false}
     if lVal.internalStruct.d != rVal.internalStruct.d {return false}
-//    if (lVal.internalStruct.e.timeIntervalSince1970 - rVal.internalStruct.e.timeIntervalSince1970) > 0.01 {return false}
+    if (lVal.internalStruct.e.timeIntervalSince1970 - rVal.internalStruct.e.timeIntervalSince1970) > 0.01 {return false}
     if lVal.internalStruct.optA != rVal.internalStruct.optA {return false}
     if lVal.internalStruct.optB != rVal.internalStruct.optB {return false}
     
@@ -80,8 +82,5 @@ func compare(lVal:MyStruct, rVal:MyStruct) -> Bool{
     
     return true
 }
-
-
-
 
 

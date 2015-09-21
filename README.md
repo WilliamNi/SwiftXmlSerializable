@@ -1,112 +1,126 @@
 # SwiftXmlSerializable
-XML Serialization help lib for iOS written in Swift, which is based upon AEXML.
-
+XML Serialization support library for iOS written in Swift language, which can help easily save/retrieve your own struct or class to/from XML.
 ##How to use:
-Your data type need to conform XmlSerializable protocol, or conform XmlSavable/XmlRetrievable protocol if need only save/retrieve xml.
+###How to save your struct/class to XML?
+Just add **XmlSavable** protocol to your own struct/class, then you automatically get the XML as NSData, String or File.
 ```swift
-protocol XmlCommon{
-}
-protocol XmlSavable:XmlCommon{
-    func toXmlElem(rootName:String) -> AEXMLElement
-}
-protocol XmlRetrievable:XmlCommon{
-    static func fromXmlElem(root:AEXMLElement) -> Self?
-}
-protocol XmlSerializable: XmlSavable, XmlRetrievable{
-}
-```
-
-##Sample code
-```swift
-struct InternalStruct: XmlSerializable{
+struct InternalStruct: XmlSavable, XmlRetrievable{
     var a:Int = 10
     var b:String = "b"
     var c:Bool   =  true
     var d:Double  = 20.20
     var e:NSDate  = NSDate()
-    
+
+    var optA:Int? = nil
+    var optB:String? = "optB"
+}
+class MyClass: XmlSavable, XmlRetrievable{
+    var internalStruct:InternalStruct
+    var arr:[String]
+    var dict:[String: Int]
+
+    required init(){
+        internalStruct = InternalStruct()
+        arr = [String]()
+        dict = [:]
+    }
+}
+
+let val2 = MyClass()
+do{
+    let xmlStr = try val2.toXmlString()
+    print(xmlStr)
+}
+catch{}
+```
+Then the xmlStr will print out as:
+````xml
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<MyClass>
+    <internalStruct>
+        <a>100</a>
+        <b>bbb</b>
+        <c>false</c>
+        <d>200.232</d>
+        <e>1442870214.88946</e>
+        <optA isNil="1"></optA>
+        <optB isNil="0">optB_new</optB>
+    </internalStruct>
+    <arr>
+        <arrItem>aaa</arrItem>
+        <arrItem>bbb</arrItem>
+        <arrItem>ccc</arrItem>
+    </arr>
+    <dict>
+        <b>10</b>
+        <a>1</a>
+        <c>100</c>
+    </dict>
+</MyClass>
+````
+
+###How to retrieve your struct/class from XML?
+Add **XmlRetrievable** protocol to your own struct/class, then conform **XmlRetrievable** by implement 2 functions:
+* init()
+* static func fromXmlElem(root:AEXMLElement)throws -> Self
+Please see sample code:
+```swift
+struct InternalStruct: XmlSavable, XmlRetrievable{
+    var a:Int = 10
+    var b:String = "b"
+    var c:Bool   =  true
+    var d:Double  = 20.20
+    var e:NSDate  = NSDate()
+
     var optA:Int? = nil
     var optB:String? = "optB"
 }
 //
 //conforming XmlSerializable
 extension InternalStruct{
-    func toXmlElem(rootName:String) -> AEXMLElement {
-        let root = AEXMLElement(rootName)
-        
-        root.addValueChild(name: "a", value: a)
-        root.addValueChild(name: "b", value: b)
-        root.addValueChild(name: "c", value: c)
-        root.addValueChild(name: "d", value: d)
-        root.addValueChild(name: "e", value: e)
-        root.addOptValueChild(name: "optA", value: optA)
-        root.addOptValueChild(name: "optB", value: optB)
-        
-        return root
-    }
-    
-    static func fromXmlElem(root:AEXMLElement) -> InternalStruct? {
+    static func fromXmlElem(root:AEXMLElement)throws -> InternalStruct {
         var ret = InternalStruct()
-        
         do{
-            ret.a = try root["a"].getIntVal()
-            ret.b = try root["b"].getStringVal()
-            ret.c = try root["c"].getBoolVal()
-            ret.d = try root["d"].getDoubleVal()
-            ret.e = try root["e"].getDateVal()
-            ret.optA = try root["optA"].getIntOptVal()
-            ret.optB = try root["optB"].getStringOptVal()
+            ret.a = try Int.fromXmlElem(root["a"])
+            ret.b = try String.fromXmlElem(root["b"])
+            ret.c = try Bool.fromXmlElem(root["c"])
+            ret.d = try Double.fromXmlElem(root["d"])
+            ret.e = try NSDate.fromXmlElem(root["e"])
+            ret.optA = try (Int?).fromXmlElem(root["optA"])
+            ret.optB = try (String?).fromXmlElem(root["optB"])
         }
-        catch{
-            return nil
-        }
-        
         return ret
     }
 }
 
 
-struct MyStruct: XmlSerializable{
-    var internalStruct:InternalStruct = InternalStruct()
-    var arr:[String] = [String]()
+class MyClass: XmlSavable, XmlRetrievable{
+    var internalStruct:InternalStruct
+    var arr:[String]
+    var dict:[String: Int]
+
+    required init(){
+        internalStruct = InternalStruct()
+        arr = [String]()
+        dict = [:]
+    }
 }
+
 //
 //conforming XmlSerializable
-extension MyStruct{
-    func toXmlElem(rootName:String) -> AEXMLElement {
-        let root = AEXMLElement(rootName)
-        
-        root.addChild(internalStruct.toXmlElem("internalStruct"))
-        
-        let arrElem = root.addChild(name: "arr")
-        for item in arr{
-            arrElem.addValueChild(name: MyStruct.getArrItemStr(), value: item)
-        }
-        
-        return root
-    }
-    
-    static func fromXmlElem(root:AEXMLElement) -> MyStruct? {
-        var ret = MyStruct()
-        
+extension MyClass{
+    static func fromXmlElem(root:AEXMLElement)throws -> Self {
+        let ret = self.init()
         do{
-            guard let internalStruct = InternalStruct.fromXmlElem(root["internalStruct"]) else {return nil}
-            ret.internalStruct = internalStruct
-            
-            guard let arr = root["arr"][MyStruct.getArrItemStr()].all else {return nil}
-            for item in arr{
-                ret.arr.append(try item.getStringVal())
-            }
+            ret.internalStruct = try InternalStruct.fromXmlElem(root["internalStruct"])
+            ret.arr = try [String].fromXmlElem(root["arr"])
+            ret.dict = try [String: Int].fromXmlElem(root["dict"])
         }
-        catch{
-            return nil
-        }
-        
         return ret
     }
 }
 
-func compare(lVal:MyStruct, rVal:MyStruct) -> Bool{
+func compare(lVal:MyClass, rVal:MyClass) -> Bool{
     if lVal.internalStruct.a != rVal.internalStruct.a {return false}
     if lVal.internalStruct.b != rVal.internalStruct.b {return false}
     if lVal.internalStruct.c != rVal.internalStruct.c {return false}
@@ -114,11 +128,15 @@ func compare(lVal:MyStruct, rVal:MyStruct) -> Bool{
     if (lVal.internalStruct.e.timeIntervalSince1970 - rVal.internalStruct.e.timeIntervalSince1970) > 0.01 {return false}
     if lVal.internalStruct.optA != rVal.internalStruct.optA {return false}
     if lVal.internalStruct.optB != rVal.internalStruct.optB {return false}
-    
+
     for var i = 0; i < lVal.arr.count; i++ {
         if lVal.arr[i] != rVal.arr[i] {return false}
     }
-    
+
+    for (key, _) in lVal.dict {
+        if lVal.dict[key] != rVal.dict[key] {return false}
+    }
+
     return true
 }
 
@@ -130,25 +148,28 @@ func testXmlSerializable(){
     val1.d = 200.232
     val1.e = NSDate()
     val1.optA = nil
-    val1.optB = "optB"
-    
-    var val2 = MyStruct()
+    val1.optB = "optB_new"
+
+    let val2 = MyClass()
     val2.internalStruct = val1
     val2.arr = ["aaa", "bbb", "ccc"]
-    
-    let xmlStr = val2.toXmlString()
-    print(xmlStr)
-    
-    let xmlFileUrl = getDocDirURL().URLByAppendingPathComponent("MyStruct.xml")
-    val2.toXmlFile(xmlUrl: xmlFileUrl)
-    
-    if let val2New = MyStruct.fromXmlFile(xmlFileUrl){
+    val2.dict = ["a":1, "b":10, "c":100]
+
+    do {
+        let xmlStr = try val2.toXmlString()
+        print(xmlStr)
+
+        let xmlFileUrl = getDocDirURL().URLByAppendingPathComponent("MyStruct.xml")
+        try val2.toXmlFile(xmlUrl: xmlFileUrl)
+
+        let val2New = try MyClass.fromXmlFile(xmlFileUrl)
         let ret = compare(val2, rVal: val2New)
         let retStr = ret ? "same" : "different"
         print("Compare original struct and retrieved struct. They are \(retStr)")
+
     }
-    else{
-        print("Cannot load Xml file from \(xmlFileUrl)")
+    catch let error as NSError{
+        print(error.localizedDescription)
     }
 }
 ```
