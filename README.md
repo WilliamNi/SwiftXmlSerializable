@@ -30,7 +30,7 @@ let val2 = MyClass()
 val2.internalStruct = val1
 val2.arr = ["aaa", "bbb", "ccc"]
 val2.dict = ["a":1, "b":10, "c":100]
-let xmlStr = try? val2.toXmlString()  //You can also call toXmlData/toXmlFile to get XML as NSData or File
+let xmlStr = try? val2.toXmlString()
 print(xmlStr!)
 ```
 Then the xmlStr will print out as:
@@ -58,12 +58,51 @@ Then the xmlStr will print out as:
     </dict>
 </MyClass>
 ````
+You can also call toXmlData() to get XML as NSData, or call toXmlFile() to save XML as File
 
 ###Retrieve your struct/class from XML
 Add **XmlRetrievable** protocol to your own struct/class, then conform **XmlRetrievable** by implementing following 2 functions:
 * init()
 * static func fromXmlElem(root:AEXMLElement)throws -> Self
-Please see sample code:
+```swift
+//
+//conforming XmlSerializable
+extension InternalStruct{
+    static func fromXmlElem(root:AEXMLElement)throws -> InternalStruct {
+        var ret = InternalStruct()
+        do{
+            ret.a = try Int.fromXmlElem(root["a"])
+            ret.b = try String.fromXmlElem(root["b"])
+            ret.c = try Bool.fromXmlElem(root["c"])
+            ret.d = try Double.fromXmlElem(root["d"])
+            ret.e = try NSDate.fromXmlElem(root["e"])
+            ret.optA = try (Int?).fromXmlElem(root["optA"])
+            ret.optB = try (String?).fromXmlElem(root["optB"])
+        }
+        return ret
+    }
+}
+
+//
+//conforming XmlSerializable
+extension MyClass{
+    static func fromXmlElem(root:AEXMLElement)throws -> Self {
+        let ret = self.init()
+        do{
+            ret.internalStruct = try InternalStruct.fromXmlElem(root["internalStruct"])
+            ret.arr = try [String].fromXmlElem(root["arr"])
+            ret.dict = try [String: Int].fromXmlElem(root["dict"])
+        }
+        return ret
+    }
+}
+
+let val2New = try MyClass.fromXmlString(xmlStr!)
+```
+Then variable **val2** and **val2New** should be same.
+You can also call fromXmlData() to construct your class/struct from NSData, or call fromXmlFile() to construct your class/struct from File.
+
+##Here's the complete sample code:
 ```swift
 struct InternalStruct: XmlSavable, XmlRetrievable{
     var a:Int = 10
