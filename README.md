@@ -1,5 +1,7 @@
 # SwiftXmlSerializable
-XML Serialization support library for iOS written in Swift language, which can help easily save/retrieve your own struct or class to/from XML. It is based on AEXML.
+XML Serialization support library for iOS written in Swift language, which can help easily save/retrieve your own struct or class to/from XML. It is based on AEXML.  
+
+Requires XCode version >= 7.0
 ##How to use?
 ###Save your struct/class to XML
 Just add **XmlSavable** protocol to your own struct/class, everything else will be done for you!
