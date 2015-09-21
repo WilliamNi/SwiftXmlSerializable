@@ -1,10 +1,10 @@
 # SwiftXmlSerializable
 XML Serialization support library for iOS written in Swift language, which can help easily save/retrieve your own struct or class to/from XML.
-##How to use:
-###How to save your struct/class to XML?
-Just add **XmlSavable** protocol to your own struct/class, then you automatically get the XML as NSData, String or File.
+##How to use?
+###Save your struct/class to XML
+Just add **XmlSavable** protocol to your own struct/class, everything else will be done for you!
 ```swift
-struct InternalStruct: XmlSavable, XmlRetrievable{
+struct InternalStruct: XmlSavable{
     var a:Int = 10
     var b:String = "b"
     var c:Bool   =  true
@@ -14,7 +14,7 @@ struct InternalStruct: XmlSavable, XmlRetrievable{
     var optA:Int? = nil
     var optB:String? = "optB"
 }
-class MyClass: XmlSavable, XmlRetrievable{
+class MyClass: XmlSavable{
     var internalStruct:InternalStruct
     var arr:[String]
     var dict:[String: Int]
@@ -25,26 +25,26 @@ class MyClass: XmlSavable, XmlRetrievable{
         dict = [:]
     }
 }
-
+var val1 = InternalStruct()
 let val2 = MyClass()
-do{
-    let xmlStr = try val2.toXmlString()
-    print(xmlStr)
-}
-catch{}
+val2.internalStruct = val1
+val2.arr = ["aaa", "bbb", "ccc"]
+val2.dict = ["a":1, "b":10, "c":100]
+let xmlStr = try? val2.toXmlString()  //You can also call toXmlData/toXmlFile to get XML as NSData or File
+print(xmlStr!)
 ```
 Then the xmlStr will print out as:
 ````xml
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <MyClass>
     <internalStruct>
-        <a>100</a>
-        <b>bbb</b>
-        <c>false</c>
-        <d>200.232</d>
-        <e>1442870214.88946</e>
+        <a>10</a>
+        <b>b</b>
+        <c>true</c>
+        <d>20.2</d>
+        <e>1442872934.39312</e>
         <optA isNil="1"></optA>
-        <optB isNil="0">optB_new</optB>
+        <optB isNil="0">optB</optB>
     </internalStruct>
     <arr>
         <arrItem>aaa</arrItem>
@@ -59,8 +59,8 @@ Then the xmlStr will print out as:
 </MyClass>
 ````
 
-###How to retrieve your struct/class from XML?
-Add **XmlRetrievable** protocol to your own struct/class, then conform **XmlRetrievable** by implement 2 functions:
+###Retrieve your struct/class from XML
+Add **XmlRetrievable** protocol to your own struct/class, then conform **XmlRetrievable** by implementing following 2 functions:
 * init()
 * static func fromXmlElem(root:AEXMLElement)throws -> Self
 Please see sample code:
