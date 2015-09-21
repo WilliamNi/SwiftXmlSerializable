@@ -59,7 +59,6 @@ Then the xmlStr will print out as:
 </MyClass>
 ````
 You can also call toXmlData() to get XML as NSData, or call toXmlFile() to save XML as File
-
 ###Retrieve your struct/class from XML
 Add **XmlRetrievable** protocol to your own struct/class, then conform **XmlRetrievable** by implementing following 2 functions:
 * init()
@@ -100,8 +99,8 @@ extension MyClass{
 let val2New = try MyClass.fromXmlString(xmlStr!)
 ```
 Then variable **val2** and **val2New** should be same.
-You can also call fromXmlData() to construct your class/struct from NSData, or call fromXmlFile() to construct your class/struct from File.
 
+You can also call fromXmlData() to construct your class/struct from NSData, or call fromXmlFile() to construct your class/struct from File.
 ##Here's the complete sample code:
 ```swift
 struct InternalStruct: XmlSavable, XmlRetrievable{
